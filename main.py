@@ -2,11 +2,17 @@ from tkinter import *
 from pickle import load, dump
 
 # область функций
-def set_status():
-    pass
+def set_status(status_text,color = 'black'):
+    canvas.itemconfig(text=status_text, fg=color)
+
 
 def pause_toggle():
-    pass
+    global pause
+    pause = not pause
+    if pause:
+        set_status("пауза")
+    else:
+        set_status("вперед")
 
 
 def menu_toggle():
@@ -14,10 +20,30 @@ def menu_toggle():
 
 
 def key_handler(event):
-    pass
+    if game_over:
+        return
+
+    if event.keycode == KEY_PAUSE:
+        pause_toggle()
+
+    if pause:
+        return
+
+    set_status('вперед')
+
+    if event.keycode == KEY_UP:
+        canvas.move(player1,SPEED, 0 )
+    if event.keycode == KEY_UP:
+        canvas.move(player2,SPEED, 0 )
+
+    check_finish()
 
 def check_finish():
-    pass
+    global game_over
+     coords_player1 = canvas.coords(player1)
+     coords_player2 = canvas.coords(player2)
+     coords_finish = canvas.coords(finish_id)
+
 
 
 def menu_enter():
@@ -32,12 +58,22 @@ def game_resume():
     pass
 
 
-def game_save():
-    pass
+def game_save(event):
+    x1 = canvas.coords(player1)[0]
+    x2 = canvas.coords(player2)[0]
+    data = [x1,x2]
+    with open('save.data', 'wb') as f:
+        dump(data, f)
+        set_status("сохранено")
 
 
 def game_load():
-    pass
+    global x1, x2
+    with open("save.data",'rb')as f:
+        data = load(f)
+        x1, x2 = data
+        canvas.coords(player1, x1, y1, x1 + player_size, y1+player_size)
+        canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
 
 
 def game_exit():
