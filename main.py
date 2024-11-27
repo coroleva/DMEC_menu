@@ -3,7 +3,7 @@ from pickle import load, dump
 
 # область функций
 def set_status(status_text,color = 'black'):
-    canvas.itemconfig(text=status_text, fg=color)
+    canvas.itemconfig(text_id,text=status_text, fill=color)
 
 
 def pause_toggle():
@@ -14,10 +14,27 @@ def pause_toggle():
     else:
         set_status("вперед")
 
+def game_controller(event):
+    if event.keycode == KEY_ESC:
+        menu_show()
+    else:
+        print('управляемый персонаж игры')
 
-def menu_toggle():
-    pass
+def menu_controller(event):
+    if event.keycode == KEY_UP:
+        menu_up()
+    elif event.keycode == KEY_DOWN:
+        menu_down()
+    elif event.keycode == KEY_ESC:
+        menu_hide
+    elif event.keycode == KEY_ENTER:
+        menu_enter()
 
+def key_press(event):
+    if menu_mode:
+        menu_controller(event)
+    else:
+        game_controller(event)
 
 def key_handler(event):
     if game_over:
@@ -32,33 +49,57 @@ def key_handler(event):
     set_status('вперед')
 
     if event.keycode == KEY_UP:
-        canvas.move(player1,SPEED, 0 )
-    if event.keycode == KEY_UP:
-        canvas.move(player2,SPEED, 0 )
-
+        canvas.move(player1,SPEED, 0)
+    elif event.keycode == KEY_DOWN:
+        canvas.move(player2,SPEED, 0)
     check_finish()
 
 def check_finish():
     global game_over
-     coords_player1 = canvas.coords(player1)
-     coords_player2 = canvas.coords(player2)
-     coords_finish = canvas.coords(finish_id)
+    coords_player1 = canvas.coords(player1)
+    coords_player2 = canvas.coords(player2)
+    coords_finish = canvas.coords(finish_id)
 
+    x1_right = coords_player1[2]
+    x2_right = coords_player2[2]
+    x_finish = coords_finish[0]
+
+    if x1_right >= x_finish:
+        set_status("выиграл игрок 1!")
+        game_over = True
+    if x2_right >= x_finish:
+        set_status("выиграл игрок 2!")
+        game_over = True
 
 
 def menu_enter():
-    pass
+    if menu_current_index == 0:
+        game_resume()
+    elif menu_current_index == 1:
+        game_new()
+    elif menu_current_index == 2:
+        game_save()
+    elif menu_current_index == 3:
+        game_load()
+    elif menu_current_index == 4:
+        game_exit()
+    menu_hide()
 
 
 def game_new():
-    pass
-
+    print('Начинаем новую игру')
 
 def game_resume():
-    pass
+    print('Возобновляем старую игру')
+
+def game_save():
+    print('сохраняем игру')
+
+def game_load():
+    print('загружаем игру')
 
 
-def game_save(event):
+def save_game(event):
     x1 = canvas.coords(player1)[0]
     x2 = canvas.coords(player2)[0]
     data = [x1,x2]
@@ -67,7 +108,7 @@ def game_save(event):
         set_status("сохранено")
 
 
-def game_load():
+def load_game(event):
     global x1, x2
     with open("save.data",'rb')as f:
         data = load(f)
@@ -77,32 +118,55 @@ def game_load():
 
 
 def game_exit():
-    pass
-
+    print('выходим из игры')
+    exit()
 
 def menu_show():
-    pass
-
+    global menu_mode
+    menu_mode = True
+    menu_update()
 
 def menu_hide():
-    pass
+    global menu_mode
+    menu_mode = False
+    menu_update()
 
 
 def menu_up():
-    pass
-
+    global menu_current_index
+    menu_current_index -= 1
+    if menu_current_index < 0:
+        menu_current_index = 0
+    menu_update()
 
 def menu_down():
-    pass
+    global menu_current_index
+    menu_current_index += 1
+    if menu_current_index > len(menu_options) - 1:
+        menu_current_index = len(menu_options) - 1
+    menu_update()
 
 
 def menu_update():
-    pass
-
+    for menu_index in range(len(menu_options_id)):
+        element_id = menu_options_id[menu_index]
+        if menu_mode:
+            canvas.itemconfig(element_id, state='normal')
+            if menu_index == menu_current_index:
+                canvas.itemconfig(element_id, fill='blue')
+            else:
+                canvas.itemconfig(element_id, fill='black')
+        else:
+            canvas.itemconfig(element_id, state='hidden')
 
 def menu_create(canvas):
-    pass
-
+    offest = 0
+    for menu_option in menu_options:
+        option_id = canvas.create_text(400, 200+offest,anchor=CENTER, font=('Arial','25'),
+                                       text=menu_options,fill='black')
+        menu_options_id.append(option_id)
+        offest += 50
+    menu_update()
 
 # область переменных
 game_width = 800
@@ -145,6 +209,8 @@ window.title('DMEC')
 canvas = Canvas(window, width=game_width, height=game_height, bg='white')
 canvas.pack()
 menu_create(canvas)
+
+
 player1 = canvas.create_rectangle(x1,
                                   y1,
                                   x1 + player_size,
@@ -169,5 +235,10 @@ text_id = canvas.create_text(x1,
 
 
 # Функции обратного вызова
+canvas.pack()
+menu_create(canvas)
+window.bind('<Key>',key_press)
 window.bind('<KeyRelease>', key_handler)
+window.bind('<Control-Key-s>', save_game)
+window.bind('<Control-Key-o>', load_game)
 window.mainloop()
