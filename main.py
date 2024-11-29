@@ -33,7 +33,7 @@ def key_handler(event):
 
 def check_finish():
     global game_over
-    
+
 
 
 def menu_enter():
