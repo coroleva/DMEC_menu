@@ -14,7 +14,7 @@ def menu_toggle():
 
 
 def key_handler(event):
-    pass
+    canvas.move(player1, 5, 2)
 
 def check_finish():
     pass
