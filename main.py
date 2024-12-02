@@ -2,11 +2,16 @@ from tkinter import *
 from pickle import load, dump
 
 # область функций
-def set_status():
-    pass
+def set_status(status_text, color = 'black'):
+    canvas.itemconfig(text_id, text = status_text, fill = color)
 
 def pause_toggle():
-    pass
+    global pause
+    pause = not pause
+    if pause:
+        set_status('Время пить чай!')
+    else:
+        set_status('Вперёд!')
 
 
 def menu_toggle():
@@ -14,10 +19,45 @@ def menu_toggle():
 
 
 def key_handler(event):
-    pass
+    if game_over:
+        return
+
+    if event.keycode == KEY_PAUSE:
+        pause_toggle()
+
+    if pause:
+        return
+
+    set_status('Вперёд!')
+
+    if event.keycode == KEY_PLAYER1:
+        canvas.move(player1, SPEED, 0)
+
+    elif event.keycode == KEY_PLAYER2:
+        canvas.move(player2, SPEED, 0)
+
+    check_finish()
 
 def check_finish():
-    pass
+    global game_over
+
+    coords_player1 = canvas.coords(player1)
+    coords_player2 = canvas.coords(player2)
+    coords_finish = canvas.coords(finish_id)
+
+    x1_right = coords_player1[2]
+    x2_right = coords_player2[2]
+    x_finish = coords_finish[0]
+
+    if x1_right >= x_finish:
+        set_status('Победил красный игрок!', player1_color)
+        print('Победил красный игрок!')
+        game_over = True
+
+    if x2_right >= x_finish:
+        set_status('Победил синий игрок!', player2_color)
+        print('Победил синий игрок!')
+        game_over = True
 
 
 def menu_enter():
@@ -32,12 +72,23 @@ def game_resume():
     pass
 
 
-def game_save():
-    pass
+def game_save(event):
+    x1 = canvas.coords(player1)[0]
+    x2 = canvas.coords(player2)[0]
+    data = [x1, x2]
+    with open('save.dat', 'wb') as f:
+        dump(data, f)
+        set_status('Сохранено')
 
 
-def game_load():
-    pass
+def game_load(event):
+    global x1, x2
+    with open('save.dat', 'rb') as f:
+        data = load(f)
+        x1, x2 = data
+        canvas.coords(player1, x1, y1, x1 + player_size, y1 + player_size)
+        canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
+        set_status('Загружено')
 
 
 def game_exit():
@@ -92,15 +143,12 @@ x_finish = game_width - 50
 
 KEY_PLAYER1 = 39
 KEY_PLAYER2 = 68
-KEY_PAUSE = 19
+KEY_PAUSE = 32
 
-SPEED = 12
+SPEED = 50
 
 game_over = False
 pause = False
-
-game_width = 800
-game_height = 800
 
 # Окно и объекты
 window = Tk()
