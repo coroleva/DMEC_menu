@@ -5,6 +5,8 @@ from pickle import load, dump
 def set_status(status_text, color='black'):
     canvas.itemconfig(text_id, text=status_text, fill=color)
 
+pause = False
+
 def pause_toggle():
     global pause
     pause = not pause
@@ -14,50 +16,56 @@ def pause_toggle():
         set_status("Вперед!")
 
 
-def menu_toggle(event):
-    if event.keycode == KEY_ESC:
-        menu_show()
+
+def menu_toggle():
+    global menu_mode
+    if menu_mode:
+        menu_hide()
     else:
-        print("Управляем персонажами игры")
+        menu_show()
 
 
 def key_handler(event):
-    if event.keycode == KEY_UP:
-        menu_up()
-    elif event.keycode == KEY_DOWN:
-        menu_down()
-    elif event.keycode == KEY_ESC:
-        menu_hide()
-    elif event.keycode == KEY_ENTER:
-        menu_enter()
-
+    global menu_mode
+    if event.keycode == KEY_ESC:
+        menu_toggle()
+        return
+    if menu_mode:
+        if event.keycode == KEY_UP:
+            menu_up()
+        elif event.keycode == KEY_DOWN:
+            menu_down()
+        elif event.keycode == KEY_ENTER:
+            menu_enter()
+            return#f
     if game_over:
         return
-
     if event.keycode == KEY_PAUSE:
         pause_toggle()
-
+        return
     if pause:
         return
-
-    set_status('Вперед!')
-
     if event.keycode == KEY_PLAYER1:
         canvas.move(player1, SPEED, 0)
     elif event.keycode == KEY_PLAYER2:
         canvas.move(player2, SPEED, 0)
-
     check_finish()
 
 def check_finish():
     global game_over
+
     coords_player1 = canvas.coords(player1)
     coords_player2 = canvas.coords(player2)
     coords_finish = canvas.coords(finish_id)
-
-    x1_right=coords_player1[2]
+    x1_right = coords_player1[2]
     x2_right = coords_player2[2]
     x_finish = coords_finish[0]
+    if x1_right >= x_finish:
+        set_status('Победил красный игрок!', player1_color)
+        game_over = True
+    if x2_right >= x_finish:
+        set_status('Победил синий игрок!', player2_color)
+        game_over = True
 
 
 def menu_enter():
@@ -74,6 +82,10 @@ def menu_enter():
     menu_hide()
 
 def game_new():
+    canvas.coords(player1, x1, y1, x1 + player_size, y1 + player_size)
+    canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
+    global game_over
+    game_over = False
     print('Начинаем новую игру')
 
 
@@ -81,17 +93,17 @@ def game_resume():
     print('Возобнавяем старую игру')
 
 
-def game_save(event):
-    x1=canvas.coords(player1)[0]
-    x2=canvas.coords(player2)[0]
-    data=[x1,x2]
+def game_save():
+    x1 = canvas.coords(player1)[0]
+    x2 = canvas.coords(player2)[0]
+    data = [x1, x2]
     with open("save.dat", "wb") as f:
         dump(data, f)
         set_status("Сохранено")
     print('Сохраняем игру')
 
 
-def game_load(event):
+def game_load():
     global x1, x2
     with open('save.dat', 'rb') as f:
         data = load(f)
@@ -180,7 +192,7 @@ KEY_PAUSE = 19
 SPEED = 12
 
 game_over = False
-pause = False
+
 
 game_width = 800
 game_height = 800
@@ -219,6 +231,4 @@ text_id = canvas.create_text(x1,
 # Функции обратного вызова
 canvas.pack()
 window.bind('<KeyRelease>', key_handler)
-window.bind('<Control-Key-s>', game_save)
-window.bind('<Control-Key-o>', game_load)
 window.mainloop()
