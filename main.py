@@ -193,7 +193,7 @@ def menu_create(canvas):
 
 game_width = 800
 game_height = 800
-menu_mode = False  # Меню скрыто по умолчанию
+menu_mode = False
 menu_options = ['Возврат в игру', 'Новая игра', 'Сохранить', 'Загрузить', 'Выход']
 menu_current_index = 0
 menu_options_id = []
@@ -251,6 +251,6 @@ text_id = canvas.create_text(x1,
 
 
 window.bind('<KeyRelease>', key_handler)
-menu_create(canvas)  # Меню создается сразу, но скрыто
+menu_create(canvas)
 canvas.pack()
 window.mainloop()
