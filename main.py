@@ -220,7 +220,7 @@ SPEED = 12
 game_over = False
 pause = False
 
-# Окно и объекты
+
 window = Tk()
 window.title('DMEC')
 
