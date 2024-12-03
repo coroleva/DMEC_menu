@@ -1,9 +1,8 @@
 from tkinter import *
 from pickle import load, dump
 
-# область функций
-def set_status(status_text, color = 'black'):
-    canvas.itemconfig(text_id, text = status_text, fill = color)
+def set_status(status_text, color='black'):
+    canvas.itemconfig(text_id, text=status_text, fill=color)
 
 def pause_toggle():
     global pause
@@ -13,13 +12,19 @@ def pause_toggle():
     else:
         set_status('Вперёд!')
 
-
 def menu_toggle():
-    pass
-
+    global menu_mode
+    menu_mode = not menu_mode
+    menu_update()
 
 def key_handler(event):
-    if game_over:
+    global menu_mode
+
+    if event.keycode == KEY_ESC:
+        menu_toggle()
+        return
+
+    if game_over or menu_mode:
         return
 
     if event.keycode == KEY_PAUSE:
@@ -32,7 +37,6 @@ def key_handler(event):
 
     if event.keycode == KEY_PLAYER1:
         canvas.move(player1, SPEED, 0)
-
     elif event.keycode == KEY_PLAYER2:
         canvas.move(player2, SPEED, 0)
 
@@ -51,28 +55,31 @@ def check_finish():
 
     if x1_right >= x_finish:
         set_status('Победил красный игрок!', player1_color)
-        print('Победил красный игрок!')
         game_over = True
 
     if x2_right >= x_finish:
         set_status('Победил синий игрок!', player2_color)
-        print('Победил синий игрок!')
         game_over = True
 
-
 def menu_enter():
-    pass
-
+    if menu_current_index == 0:
+        game_resume()
+    elif menu_current_index == 1:
+        game_new()
+    elif menu_current_index == 2:
+        game_save()
+    elif menu_current_index == 3:
+        game_load()
+    elif menu_current_index == 4:
+        menu_hide()
 
 def game_new():
-    pass
-
+    print('Начинаем новую игру')
 
 def game_resume():
-    pass
+    print('Возобновляем старую игру')
 
-
-def game_save(event):
+def game_save():
     x1 = canvas.coords(player1)[0]
     x2 = canvas.coords(player2)[0]
     data = [x1, x2]
@@ -80,53 +87,50 @@ def game_save(event):
         dump(data, f)
         set_status('Сохранено')
 
-
-def game_load(event):
+def game_load():
     global x1, x2
     with open('save.dat', 'rb') as f:
         data = load(f)
         x1, x2 = data
         canvas.coords(player1, x1, y1, x1 + player_size, y1 + player_size)
         canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
-        set_status('Загружено')
-
+        set_status('Загружаем игру')
 
 def game_exit():
-    pass
-
-
-def menu_show():
-    pass
-
+    print('Выходим из игры')
+    exit()
 
 def menu_hide():
-    pass
-
-
-def menu_up():
-    pass
-
-
-def menu_down():
-    pass
-
+    global menu_mode
+    menu_mode = False
+    menu_update()
 
 def menu_update():
-    pass
-
+    for menu_index in range(len(menu_options_id)):
+        element_id = menu_options_id[menu_index]
+        if menu_mode:
+            canvas.itemconfig(element_id, state='normal')
+            if menu_index == menu_current_index:
+                canvas.itemconfig(element_id, fill='black')
+            else:
+                canvas.itemconfig(element_id, fill='black')
+        else:
+            canvas.itemconfig(element_id, state='hidden')
 
 def menu_create(canvas):
-    pass
+    offset = 0
+    for menu_option in menu_options:
+        option_id = canvas.create_text(400, 200 + offset, anchor=CENTER, font=('Arial', '25'), text=menu_option, fill='black', state='hidden')
+        menu_options_id.append(option_id)
+        offset += 50
 
 
-# область переменных
 game_width = 800
 game_height = 800
-menu_mode = True
+menu_mode = False
 menu_options = ['Возврат в игру', 'Новая игра', 'Сохранить', 'Загрузить', 'Выход']
-menu_current_index = 3
+menu_current_index = 0
 menu_options_id = []
-
 
 KEY_UP = 87
 KEY_DOWN = 83
@@ -182,4 +186,7 @@ text_id = canvas.create_text(x1,
 
 # Функции обратного вызова
 window.bind('<KeyRelease>', key_handler)
+#window.bind('<Key>', key_press)
+menu_create(canvas)
+canvas.pack()
 window.mainloop()
