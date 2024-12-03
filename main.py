@@ -1,8 +1,10 @@
 from tkinter import *
 from pickle import load, dump
 
+
 def set_status(status_text, color='black'):
     canvas.itemconfig(text_id, text=status_text, fill=color)
+
 
 def pause_toggle():
     global pause
@@ -12,10 +14,14 @@ def pause_toggle():
     else:
         set_status('Вперёд!')
 
+
 def menu_toggle():
     global menu_mode
-    menu_mode = not menu_mode
-    menu_update()
+    if menu_mode:
+        menu_hide()
+    else:
+        menu_show()
+
 
 def key_handler(event):
     global menu_mode
@@ -24,16 +30,24 @@ def key_handler(event):
         menu_toggle()
         return
 
-    if game_over or menu_mode:
+    if menu_mode:
+        if event.keycode == KEY_UP:
+            menu_up()
+        elif event.keycode == KEY_DOWN:
+            menu_down()
+        elif event.keycode == KEY_ENTER:
+            menu_enter()
+        return
+
+    if game_over:
         return
 
     if event.keycode == KEY_PAUSE:
         pause_toggle()
+        return
 
     if pause:
         return
-
-    set_status('Вперёд!')
 
     if event.keycode == KEY_PLAYER1:
         canvas.move(player1, SPEED, 0)
@@ -41,6 +55,7 @@ def key_handler(event):
         canvas.move(player2, SPEED, 0)
 
     check_finish()
+
 
 def check_finish():
     global game_over
@@ -61,6 +76,7 @@ def check_finish():
         set_status('Победил синий игрок!', player2_color)
         game_over = True
 
+
 def menu_enter():
     if menu_current_index == 0:
         game_resume()
@@ -71,13 +87,27 @@ def menu_enter():
     elif menu_current_index == 3:
         game_load()
     elif menu_current_index == 4:
-        menu_hide()
+        game_exit()
+
 
 def game_new():
-    print('Начинаем новую игру')
+    global game_over, pause
+    game_over = False
+    pause = False
+    canvas.coords(player1, x1, y1, x1 + player_size, y1 + player_size)
+    canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
+    set_status('Вперёд!', 'black')
+
 
 def game_resume():
-    print('Возобновляем старую игру')
+    global menu_mode, pause
+    if not game_over:
+        menu_hide()
+        pause = False
+        set_status('Вперёд!', 'black')
+    else:
+        set_status('Игра уже завершена. Начните новую игру.', 'red')
+
 
 def game_save():
     x1 = canvas.coords(player1)[0]
@@ -87,6 +117,7 @@ def game_save():
         dump(data, f)
         set_status('Сохранено')
 
+
 def game_load():
     global x1, x2
     with open('save.dat', 'rb') as f:
@@ -94,40 +125,75 @@ def game_load():
         x1, x2 = data
         canvas.coords(player1, x1, y1, x1 + player_size, y1 + player_size)
         canvas.coords(player2, x2, y2, x2 + player_size, y2 + player_size)
-        set_status('Загружаем игру')
+        set_status('Вперёд!')
+
 
 def game_exit():
     print('Выходим из игры')
     exit()
+
+
+def menu_show():
+    global menu_mode
+    menu_mode = True
+    menu_update()
+
 
 def menu_hide():
     global menu_mode
     menu_mode = False
     menu_update()
 
+
+def menu_up():
+    global menu_current_index
+    if menu_current_index > 0:
+        menu_current_index -= 1
+    menu_update()
+
+
+def menu_down():
+    global menu_current_index
+    if menu_current_index < len(menu_options) - 1:
+        menu_current_index += 1
+    menu_update()
+
+
 def menu_update():
-    for menu_index in range(len(menu_options_id)):
-        element_id = menu_options_id[menu_index]
-        if menu_mode:
-            canvas.itemconfig(element_id, state='normal')
-            if menu_index == menu_current_index:
-                canvas.itemconfig(element_id, fill='black')
-            else:
-                canvas.itemconfig(element_id, fill='black')
+    global menu_options_id
+
+    for element_id in menu_options_id:
+        canvas.delete(element_id)
+    menu_options_id.clear()
+
+    if not menu_mode:
+        set_status('Вперёд!', 'black')
+        return
+
+    offset = 0
+    for menu_index, menu_option in enumerate(menu_options):
+        if menu_index == menu_current_index:
+            option_id = canvas.create_text(400, 200 + offset, anchor=CENTER, font=('Arial', '30', 'bold'),
+                                           text=menu_option, fill='black')
         else:
-            canvas.itemconfig(element_id, state='hidden')
+            option_id = canvas.create_text(400, 200 + offset, anchor=CENTER, font=('Arial', '25'), text=menu_option,
+                                           fill='black')
+        menu_options_id.append(option_id)
+        offset += 50
+
 
 def menu_create(canvas):
     offset = 0
     for menu_option in menu_options:
-        option_id = canvas.create_text(400, 200 + offset, anchor=CENTER, font=('Arial', '25'), text=menu_option, fill='black', state='hidden')
+        option_id = canvas.create_text(400, 200 + offset, anchor=CENTER, font=('Arial', '25'), text=menu_option,
+                                       fill='black', state='hidden')
         menu_options_id.append(option_id)
         offset += 50
 
 
 game_width = 800
 game_height = 800
-menu_mode = False
+menu_mode = False  # Меню скрыто по умолчанию
 menu_options = ['Возврат в игру', 'Новая игра', 'Сохранить', 'Загрузить', 'Выход']
 menu_current_index = 0
 menu_options_id = []
@@ -149,7 +215,7 @@ KEY_PLAYER1 = 39
 KEY_PLAYER2 = 68
 KEY_PAUSE = 32
 
-SPEED = 50
+SPEED = 12
 
 game_over = False
 pause = False
@@ -181,12 +247,10 @@ text_id = canvas.create_text(x1,
                              game_height - 50,
                              anchor=SW,
                              font=('Arial', '25'),
-                             text='Вперед!')
+                             text='Вперёд!')
 
 
-# Функции обратного вызова
 window.bind('<KeyRelease>', key_handler)
-#window.bind('<Key>', key_press)
-menu_create(canvas)
+menu_create(canvas)  # Меню создается сразу, но скрыто
 canvas.pack()
 window.mainloop()
