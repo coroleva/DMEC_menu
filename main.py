@@ -1,9 +1,10 @@
+from telnetlib import FORWARD_X
 from tkinter import *
 from pickle import load, dump
 
 # область функций
-def set_status():
-    pass
+def set_status(status_text):
+    canvas.itemconfig(text_status_id, text=status_text)
 
 def pause_toggle():
     pass
@@ -14,10 +15,14 @@ def menu_toggle():
 
 
 def key_handler(event):
-    pass
+    if event.keycode == FORWARD1:
+        canvas.move(player1_id, 5, 0)
+
 
 def check_finish():
-    pass
+    if x1_right >= x_finish:
+        set_status('Победа верхнего игрока')
+        game_over =
 
 
 def menu_enter():
