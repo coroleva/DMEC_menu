@@ -36,7 +36,7 @@ def game_save():
     pass
 
 
-def game_load():
+def game_load(): 
     pass
 
 
