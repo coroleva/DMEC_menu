@@ -1,13 +1,19 @@
 from telnetlib import FORWARD_X
 from tkinter import *
-from pickle import load, dump
+from pickle import dump,load
+
 
 # область функций
-def set_status(status_text):
-    canvas.itemconfig(text_status_id, text=status_text)
+def set_status(status_text,color='black'):
+    canvas.itemconfig(text_status_id,text=status_text, fill=color)
 
 def pause_toggle():
-    pass
+    global pause
+    pause = not pause
+    if pause:
+        set_status('ПАУЗА')
+    else:
+        set_status('Вперед')
 
 
 def menu_toggle():
@@ -15,15 +21,40 @@ def menu_toggle():
 
 
 def key_handler(event):
+    if game_over:
+        return
+
+    if event.keycode == KEY_PAUSE:
+        pause_toggle()
+
+    if pause:
+        return
+
     if event.keycode == FORWARD1:
-        canvas.move(player1_id, 5, 0)
+        canvas.move(player1_id, SPEED,0)
+    elif event.keycode == KEY_FORWARD_X:
+        canvas.move(player2_id, SPEED,0)
+    check_finish()
 
 
 def check_finish():
-    if x1_right >= x_finish:
-        set_status('Победа верхнего игрока')
-        game_over =
+    global game_over
+    coords_player1 = canvas.coords(player1_id)
+    coords_player2 = canvas.coords(player2_id)
+    coords_finish = canvas.coords(finish_id)
 
+    x1_right = coords_player1[2]
+    x1_right = coords_player2[2]
+    x1_right = coords_finish[0]
+
+
+
+    if x1_right >= x_finish:
+        set_status('Победа верхнего игрока', player1_color)
+        game_over=True
+    if x2_right >= x_finish:
+        set_status('Победа нижнего  игрока',player2_color)
+        game_over = True
 
 def menu_enter():
     pass
@@ -37,12 +68,15 @@ def game_resume():
     pass
 
 
-def game_save():
-    pass
+def save_game(event):
+
+    print('Сохроняем')
 
 
-def game_load(): 
-    pass
+
+def load_game(event):
+
+    print('Загружаем')
 
 
 def game_exit():
@@ -71,6 +105,7 @@ def menu_update():
 
 def menu_create(canvas):
     pass
+
 
 
 # область переменных
@@ -139,4 +174,7 @@ text_id = canvas.create_text(x1,
 
 # Функции обратного вызова
 window.bind('<KeyRelease>', key_handler)
+window.bind('<Control-Key-s', save_game)
+window.bind('<Control-Key-o', load_game)
+
 window.mainloop()
