@@ -36,13 +36,19 @@ def move_player(player, dx, dy):
 
 def check_finish():
     global game_over
-    player1_pos = canvas.coords(player1)
-    finish_pos = canvas.coords(finish_id)
-    if (player1_pos[0] + player_size >= finish_pos[0] and
-        player1_pos[1] <= finish_pos[3] and
-        player1_pos[1] + player_size >= finish_pos[1]):
+
+    coords_player1 = canvas.coords(player1)
+    coords_player2 = canvas.coords(player2)
+    coords_finish = canvas.coords(finish_id)
+    x1_right = coords_player1[2]
+    x2_right = coords_player2[2]
+    x_finish = coords_finish[0]
+    if x1_right >= x_finish:
+        set_status('Победил красный игрок!')
         game_over = True
-        set_status("Player 1 Wins!")
+    if x2_right >= x_finish:
+        set_status('Победил синий игрок!')
+        game_over = True
 
 def menu_enter():
     global menu_current_index
