@@ -188,7 +188,7 @@ KEY_ESC = 27
 KEY_ENTER = 13
 
 game_width = 800
-game_height = 500
+game_height = 600
 
 player_size = 100
 x1, y1 = 50, 50
